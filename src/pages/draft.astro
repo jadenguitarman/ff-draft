@@ -1,0 +1,480 @@
+---
+
+---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Fantasy Football Draft</title>
+		<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+
+		<link href="/global.css" rel="stylesheet" />
+
+		<style is:inline>
+			body {
+				overflow-y: hidden;
+			}
+
+			body > * {
+				margin-bottom: 5vh;
+			}
+
+			@keyframes la {
+				0% {
+					transform: rotate(0deg);
+				}
+
+				100% {
+					transform: rotate(360deg);
+				}
+			}
+
+			#loading {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100vw;
+				height: 100vh;
+				background: var(--white);
+				display: none;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#loading.show {
+				display: flex;
+			}
+
+			#loading-message {
+				font-size: 3vh;
+				margin-bottom: 20px;
+				text-align: center;
+			}
+
+			#loading-icon {
+				display: inline-block;
+				width: 80px;
+				height: 80px;
+			}
+
+			#loading-icon:after {
+				content: " ";
+				display: block;
+				width: 64px;
+				height: 64px;
+				margin: 8px;
+				border-radius: 50%;
+				border-width: 6px;
+				border-style: solid;
+				border-color: var(--lavender) transparent var(--lavender) transparent;
+				animation: la 1.2s linear infinite;
+			}
+
+			#name-chooser {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				text-align: center;
+			}
+
+			#name-chooser > * {
+				margin-bottom: 2vh;
+			}
+
+			#possible-teams {
+				width: 70%;
+				max-width: 400px;
+				text-align: center;
+				border: 2px solid var(--black);
+				border-radius: 0.5em;
+				font-size: var(--body-font-size);
+				padding: 15px;
+				color: var(--black);
+			}
+
+			#choose-team {
+				width: 70%;
+				max-width: 400px;
+				text-align: center;
+				border: 2px solid var(--black);
+				border-radius: 0.5em;
+				font-size: var(--body-font-size);
+				padding: 15px;
+				cursor: pointer;
+				background: var(--purple);
+				color: var(--white);
+			}
+
+			#inside-draft {
+				display: grid;
+				height: calc(100vh - 8vw);
+				width: 100%;
+				grid-template-columns: 70% 30%;
+				grid-template-rows: 1fr 70vh;
+				grid-template-areas: 'intro   intro'
+									 'players  chat';
+				grid-column-gap: 15px;
+				grid-row-gap: 15px;
+			}
+
+			@media (max-width: 800px) {
+				#inside-draft {
+					grid-template-areas: 'intro'
+										 'players'
+										 'chat';
+					grid-template-columns: 100%;
+					grid-template-rows: 10vh 50vh 1fr;
+				}
+			}
+
+			#intro {
+				grid-area: intro;
+				text-align: center;
+				font-size: clamp(
+					calc(var(--body-font-size) * 0.75),
+					3vw,
+					var(--body-font-size)
+				);
+				display: flex;
+			}
+
+			#pick-message {
+				font-size: 2vh;
+				font-weight: bold;
+			}
+
+			#start-draft {
+				cursor: pointer;
+				border-radius: 10px;
+				border: 2px solid #111;
+				padding: 10px;
+			}
+
+			body:not([data-commish=true]) #start-draft {
+				display: none;
+			}
+
+			#drafted-chat-container {
+				grid-area: chat;
+				display: flex;
+				flex-direction: column;
+			}
+
+			#drafted-chat-container > div {
+				height: 50%;
+				width: 100%;
+				border: 1px solid var(--lavender);
+				padding: 10px;
+				border-radius: 0.5em;
+			}
+
+			#drafted {
+				margin-bottom: 10px;
+			}
+
+			#chat {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				flex-direction: column;
+			}
+
+			#chat-message-container {
+				overflow-y: scroll;
+				display: flex;
+				flex-direction: column-reverse;
+				height: calc(100% - 3vh - 10px);
+				width: 100%;
+			}
+
+			#chat-input-container {
+				height: 3vh;
+				width: 100%;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			#chat-input-container > input {
+				width: calc(60% - 10px);
+				height: 100%;
+				border: 2px solid var(--black);
+				border-radius: 0.5em;
+				padding: 0 5px;
+			}
+
+			#chat-input-container > button {
+				width: 40%;
+				height: 100%;
+				border: 2px solid var(--black);
+				border-radius: 0.5em;
+				background: var(--lavender);
+			}
+
+			#player-section {
+				grid-area: players;
+				overflow-x: scroll;
+			}
+
+			#chat > p {
+				margin: 0.5em 0;
+			}
+
+			#query-row {
+				height: 8vh;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#search-input-container {
+				padding: 5px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#search-input-container > input {
+				margin-left: 5px;
+				border: 2px solid var(--black);
+				border-radius: 0.5em;
+				height: 2em;
+			}
+
+			#search-input-container > label {
+				display: none;
+			}
+
+			#refinement-list > div,
+			#refinement-list > div > ul {
+				height: 100%;
+				width: 100%;
+				display: flex;
+				justify-content: space-around;
+				align-items: center;
+				list-style-type: none;
+			}
+
+			@media (min-width:600px) {
+				#search-input-container, #refinement-list {
+					width: 50%;
+				}
+
+				#search-input-container > label {
+					display: block;
+				}
+
+				#refinement-list > div > ul::before {
+					content: 'Position:';
+				}
+			}
+
+			#refinement-list > div > ul > li {
+				border: 2px solid var(--black);
+				border-radius: 0.5em;
+				margin: 0 3px;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				background-color: #fff;
+			}
+
+			#refinement-list > div > ul > li.ais-RefinementList-item--selected {
+				background-color: var(--lavender-translucent);
+			}
+
+			#refinement-list li > div,
+			#refinement-list label {
+				width: 100%;
+				height: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+			}
+
+			#refinement-list label {
+				position: relative;
+				padding: 5px;
+			}
+
+			#refinement-list input[type=checkbox] {
+				appearance: none;
+				position: absolute;
+				left: 0;
+				top: 0;
+				width: 100%;
+				height: 100%;
+				cursor: pointer;
+			}
+
+			.ais-RefinementList-labelText {
+				font-size: var(--body-font-size);
+				user-select: none;
+				cursor: pointer;
+			}
+
+			.ais-RefinementList-count {
+				display: none;
+			}
+
+			#player-table-container {
+				overflow-y: scroll;
+				width: 100%;
+			}
+
+			#player-table {
+				border-collapse: collapse;
+				border: 0;
+				font-size: var(--body-font-size);
+				width: 100%;
+			}
+
+			#player-table th,
+			#player-table td {
+				border: 1px solid #aaa;
+				background-clip: padding-box;
+				scroll-snap-align: start;
+				height: 4vh;
+				font-size: var(--body-font-size);
+				text-align: left;
+				margin: 0;
+				white-space: nowrap;
+				padding: 0 10px;
+			}
+
+			#player-table tbody tr:last-child td {
+				border-bottom: 0;
+			}
+
+			#player-table thead {
+				position: relative;
+			}
+
+			#player-table thead th {
+				position: sticky;
+				top: 0;
+				border-top: 0;
+				background-clip: padding-box;
+				background-color: #f8f8f8;
+			}
+
+			#player-table tbody {
+				position: relative;
+			}
+
+			#player-table .player-team {
+				position: relative;
+				padding-left: 1.5em;
+			}
+
+			.player-team::before,
+			.player-team::after {
+				content: ' ';
+				width: var(--body-font-size);
+				height: var(--body-font-size);
+				position: absolute;
+				left: 0.25em;
+				top: calc(50% - 0.5em);
+				border-radius: 0.25em;
+			}
+
+			.player-team::before {
+				background: var(--primary);
+				clip-path: polygon(0% 0%, 0% 100%, 100% 0);
+			}
+
+			.player-team::after {
+				background: var(--secondary);
+				clip-path: polygon(100% 100%, 0% 100%, 100% 0);
+			}
+
+			#player-table > tbody > tr {
+				position: relative;
+			}
+
+			body[data-my-turn=true] #player-table > tbody > tr:hover::after {
+				content: "Draft " attr(data-position) " " attr(data-name) "?";
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: var(--lavender);
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				text-align: center;
+				font-size: calc(var(--body-font-size) * 1.5);
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="name-chooser">
+			<h1>Draft</h1>
+			<p>Welcome to the draft! It's time to choose your team. Teams that have already been chosen will be greyed out. If your team is taken, or if something else seems wrong, reach out to your commissioner. Have fun!</p>
+			<select id="possible-teams"></select>
+			<button id="choose-team">Choose This Team</button>
+		</div>
+
+		<div id="inside-draft" class="hidden-step">
+			<div id="intro">
+				<div>
+					<p>Welcome to the draft! If you want to invite others to the draft, you can send them this URL: <a id="draft-url" target="_blank"></a></p>
+					<p id="pick-message"></p>
+				</div>
+				<button id="start-draft" onclick="startDraft()">Start Draft</button>
+			</div>
+
+			<div id="player-section">
+				<div id="query-row">
+					<div id="search-input-container">
+						<label for="search-input">Search:</label>
+					</div>
+					<div id="refinement-list"></div>
+				</div>
+
+				<div id="player-table-container">
+					<table id="player-table">
+						<thead>
+							<th>Position</th>
+							<th>Name</th>
+							<th>Team</th>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+			</div>
+
+			<div id="drafted-chat-container">
+				<div id="drafted"></div>
+				<div id="chat">
+					<div id="chat-message-container"></div>
+					<div id="chat-input-container">
+						<input id="chat-input" />
+						<button id="send-chat">Send</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="loading">
+			<span id="loading-message"></span>
+			<div id="loading-icon"></div>
+		</div>
+
+		<script
+			src="https://cdn.jsdelivr.net/npm/algoliasearch@4.5.1/dist/algoliasearch-lite.umd.js"
+			integrity="sha256-EXPXz4W6pQgfYY3yTpnDa3OH8/EPn16ciVsPQ/ypsjk="
+			crossorigin="anonymous"
+		></script>
+		<script
+			src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.8.3/dist/instantsearch.production.min.js"
+			integrity="sha256-LAGhRRdtVoD6RLo2qDQsU2mp+XVSciKRC8XPOBWmofM="
+			crossorigin="anonymous"
+		></script>
+		<script is:inline src="/draft.js"></script>
+	</body>
+</html>

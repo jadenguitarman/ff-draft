@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../Users/jadenbaptista/Documents/Projects/ff-draft/functions/draft-player.js"],
+  "sourceRoot": "/var/folders/k2/1m4540hn171d2lzj_plwmgdh0000gn/T/tmp-82567-BGrzJqvZcKPG",
+  "sourcesContent": ["exports.handler = async ev => {\n\t// take in draft id, team id, and player object id, and update butter cms\n\n\treturn {\n\t\tstatusCode: 200,\n\t\tbody: JSON.stringify({\n\n\t\t}, null, '\\t')\n\t};\n};\n"],
+  "mappings": ";AAAA,QAAQ,UAAU,OAAM,OAAM;AAG7B,SAAO;AAAA,IACN,YAAY;AAAA,IACZ,MAAM,KAAK,UAAU,IAElB,MAAM;AAAA;AAAA;",
+  "names": []
+}

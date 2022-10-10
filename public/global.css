@@ -1,0 +1,42 @@
+:root {
+	--purple: #592E83;
+	--white: #E0E7D9;
+	--black: #230C33;
+	--lavender: #9984d4;
+	--lavender-translucent: rgba(153, 132, 212, 0.7);
+	--red: #CE3B3B;
+	--body-font-size: min(2vh, 1em);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap');
+
+* {
+	border: 0;
+	outline: 0;
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+	color: var(--black);
+	font-family: 'Inter', sans-serif;
+}
+
+.hidden-step {
+	display: none !important;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	margin: auto;
+	width: 100%;
+	max-width: 1000px;
+	justify-content: center;
+	align-items: center;
+	padding: 4vw;
+	background: var(--white);
+	font-size: var(--body-font-size);
+}
+
+a {
+	color: var(-lavender);
+}

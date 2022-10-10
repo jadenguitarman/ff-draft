@@ -1,0 +1,83 @@
+---
+
+---
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width" />
+		<title>Fantasy Football Draft</title>
+
+		<link href="/global.css" rel="stylesheet" />
+
+		<style>
+			h1 {
+				font-size: 5vh;
+			}
+
+			form {
+				margin-top: 3vh;
+				margin-left: auto;
+				margin-right: auto;
+				width: 90%;
+				max-width: 800px;
+				padding: 3vh;
+			}
+
+			.form-field {
+				height: 15vh;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.form-field label {
+				font-size: 3vh;
+				padding: 5px;
+			}
+
+			.form-field input {
+				height: 5vh;
+				border: 2px solid var(--black);
+				border-radius: 1vh;
+				width: 100%;
+			}
+
+			form button {
+				width: 100%;
+				border: 2px solid var(--black);
+				border-radius: 1vh;
+				background: var(--purple);
+                color: var(--white);
+				font-size: 3vh;
+				margin-top: 3vh;
+                cursor: pointer;
+                padding: 2vh;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Draft Creator</h1>
+
+		<form id="draft-creator">
+			<div class="form-field">
+				<label for="draftName">Draft name:</label>
+				<input name="draftName" />
+			</div>
+
+			<div class="form-field">
+				<label for="playerNames">Player names, separated by commas, in drafting order</label>
+				<input name="playerNames" />
+			</div>
+
+            <div class="form-field">
+				<label for="rounds">How many rounds?</label>
+				<input name="rounds" type="number" />
+			</div>
+
+			<button>Create Draft!</form>
+		</form>
+
+		<script is:inline src="/homepage.js"></script>
+	</body>
+</html>
